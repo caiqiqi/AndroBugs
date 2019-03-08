@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/static/favicon.ico">
+    <meta name="description" content="">
+    <meta name="keyword" content="">
+    <meta name="author" content="root">
+    <title>安卓安全审计</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+
+    <style type="text/css">
+        th {
+            text-align: center; /** 设置水平方向居中 */
+
+        }
+
+        tr {
+            text-align: center; /** 设置水平方向居中 */
+        }
+
+
+    </style>
+</head>
+<body>
+{% include 'header.html' %}
+{% include 'js.html' %}
+
+<div class="container text-center banner">
+
+
+    <!-- 扫描面板-->
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">APK上传</h3>
+        </div>
+        <div class="panel-body">
+            <!-- 扫描字段 -->
+            <div class="form-inline">
+                <div class="form-group">
+                    <from id="uploadForm">
+                        <input type="file" name="file" id="file_upload">
+                        <input type="button" value="上传" onclick="scan(this)" id="scan">
+                    </from>
+                </div>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </div>
+    </div>
+    <!-- 扫描面板结束 -->
+    <div class="container text-center">
+        <table class="table table-hover table-striped table-bordered" id="show_info1"
+               style="table-layout:fixed;word-break:break-all;">
+            <thead>
+            <tr class="active ">
+                <th colspan="6" class="text-center">扫描结果</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="info">
+                <!-- <th>ID</th> -->
+                <th id="th0" class="text-center">ID</th>
+                <th id="th1" class="text-center">检测项</th>
+                <th id="th3" class="text-center">level</th>
+                <th id="th2" class="text-center">描述</th>
+                <th id="th4" class="text-center">修复建议</th>
+                <th id="th5" class="text-center">详情</th>
+
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+</div>
+<!-- 延迟加载 遮罩层 -->
+<div class="modal fade" id="loadingModal">
+    <div style="width: 200px;height:20px; z-index: 20000; position: absolute; text-align: center; left: 50%; top: 50%;margin-left:-100px;margin-top:-10px">
+        <div class="progress progress-striped active" style="margin-bottom: 0;">
+            <div class="progress-bar" style="width: 100%;"></div>
+        </div>
+        <h5>正在检测...</h5>
+    </div>
+</div>
+
+{% include 'footer.html' %}
+
+
+<script src="/static/jquery.cookie.js"></script>
+<script type="text/javascript">
+    function scan(obj) {
+        var form_data = new FormData($("#uploadForm")[0]);
+        var file_info = $('#file_upload')[0].files[0];
+        form_data.append('file', file_info);
+        if (file_info == undefined) {
+            alert('你没有选择任何文件');
+            return false
+        }
+        if (confirm('是否开始检测？')) {
+            $('#loadingModal').modal({backdrop: 'static', keyboard: false});
+            $("#loadingModal").modal('show');
+            $('#show_info1 tr:gt(1)').remove();
+            $.ajax({
+                url: window.location.protocol + '//' + window.location.host + "{% url 'apktool_upload' %}",
+                type: 'POST',
+                data: form_data,
+                headers: {"X-CSRFToken": $.cookie('csrftoken')},
+                processData: false,  // tell jquery not to process the data
+                contentType: false, // tell jquery not to set contentType
+                secureuri: false,
+                dataType: "json",
+                success: function (data) {
+                    alert("分析完成！")
+                    $("#loadingModal").modal('hide'); //隐藏遮罩层
+                    $.each(data, function (i, item) {
+                        var name = item.name;
+                        var level = item.level;
+                        var desc = item.desc;
+                        var fix = item.fix;
+                        var codeinfo = item.details;
+                        $('#show_info1').append('<tr><td>' + i + '</td><td>' + name + '</td><td>' + level + '</td><td>' + desc + '</td><td>' + fix + '</td><td>' + '<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#' + i+ '">详情</button>' + '<div class="modal fade" id="' + i + '" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">' +
+                            '<div class="modal-dialog">' +
+                            '<div class="modal-content">' +
+                            '<div class="modal-header">' +
+                            '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+                            '&times;' +
+                            '</button>\n' +
+                            '<h4 class="modal-title" id="myModalLabel">' +
+                            '代码详情' +
+                            '</h4>' +
+                            '</div>' +
+                            '<div class="modal-body">' +
+                            codeinfo +
+                            '</div>' +
+                            '<div class="modal-footer">' +
+                            '<button type="button" class="btn btn-default" data-dismiss="modal">关闭' +
+                            '</button>' +
+                            '</div>' +
+                            '</div><!-- /.modal-content -->' +
+                            '</div><!-- /.modal -->' +
+                            '</div>' + '</td></tr>')
+                    })
+
+                },
+                error: function (returndata) {
+                    alert("上传文件出错！");
+                    $("#loadingModal").modal('hide'); //隐藏遮罩层
+                }
+            });
+        } else {
+            return 0;
+        }
+    }
+</script>
+</body>
+</html>
