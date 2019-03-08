@@ -40,5 +40,5 @@ python androbugs.py -h
 ```
 ## 检测报告
 默认在Reports目录下：
-- [应用包名]_[唯一标识].txt
-- [应用包名]_[唯一标识].txt.json
+- [应用包名]_[唯一标识].txt: https://github.com/caiqiqi/apk_detection_demo/blob/master/com.weico.international_76a40495c89cf6fc3028289c06a281d24fb00190e6fbd79ca0adefce3f9f62c0.txt
+- [应用包名]_[唯一标识].txt.json: https://github.com/caiqiqi/apk_detection_demo/blob/master/com.weico.international_76a40495c89cf6fc3028289c06a281d24fb00190e6fbd79ca0adefce3f9f62c0.txt.json
